@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=quotes_project.settings
+  redis:
+    image: redis:6.2.7-alpine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
