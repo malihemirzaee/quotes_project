@@ -79,6 +79,9 @@ class QuotesDetailViewSet(
 
     def create(self, request, *args, **kwargs):
         quote_id = self.kwargs.get("quote_id")
+        quote = Quote.objects.filter(_id=quote_id)
+        if quote.exists():
+            return Response({"quote with this quote_id  already exists."}, status=status.HTTP_400_BAD_REQUEST)
         request.data.update({"_id": quote_id})
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -100,7 +103,7 @@ class QuotesDetailViewSet(
         except Quote.DoesNotExist:
             return Response({'error': 'Quote not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(quote, data=request.data, partial=True)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         quote = serializer.save()
         cache.set(quote_id, quote)
         return Response(serializer.data)

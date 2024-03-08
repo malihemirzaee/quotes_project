@@ -24,6 +24,7 @@ class QuotesDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quote
         fields = (
+            "_id",
             "content",
             "author",
             "tags",

@@ -3,6 +3,7 @@ from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 
 from quotes.models import Quote
+from quotes_project.settings import THIRD_PARTY_THROTTLE, THIRD_PARTY_THROTTLE_TTL
 
 
 class QuoteThirdParty:
@@ -16,6 +17,7 @@ class QuoteThirdParty:
         return "https://api.quotable.io/{request_param}"
 
     def get_quotes_list(self, limit, term=None, author=None, tags=None):
+        self.check_rate_limit()
         url = self.base_url.format(request_param="quotes/random")
         params = {
             'limit': limit,
@@ -40,6 +42,7 @@ class QuoteThirdParty:
         return quotes
 
     def get_quote_detail(self, quote_id):
+        self.check_rate_limit()
         url = self.base_url.format(request_param=f'quotes/{quote_id}')
         response = requests.get(url)
         if response.status_code == 404:
@@ -50,3 +53,9 @@ class QuoteThirdParty:
             **quote_data
         )
         return quote
+
+    def check_rate_limit(self):
+        count = cache.get("third_party_throttle", 0)
+        if count >= THIRD_PARTY_THROTTLE:
+            raise ValidationError("third party is not available! please try again later.")
+        cache.set("third_party_throttle", count + 1, THIRD_PARTY_THROTTLE_TTL)
